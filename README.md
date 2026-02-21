@@ -117,6 +117,21 @@ eraa-data-visualizer/
         └── cli.py           # CLI (eraa-viz)
 ```
 
+## Git und GitHub
+
+Repository ist bereits initialisiert. Zum Pushen auf GitHub:
+
+1. Auf GitHub ein neues Repository anlegen (z. B. `eraa-data-visualizer`, leer, ohne README).
+2. Remote hinzufügen und pushen:
+
+```bash
+git remote add origin https://github.com/DEIN_USERNAME/eraa-data-visualizer.git
+git branch -M main
+git push -u origin main
+```
+
+Oder mit GitHub CLI: `gh repo create eraa-data-visualizer --private --source=. --push`
+
 ## Lizenz
 
 Projektbezogen (siehe Repository).
