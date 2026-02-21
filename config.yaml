@@ -1,0 +1,125 @@
+# ERAA Data Visualizer – Konfiguration
+# European Resource Adequacy Assessment (ERAA) Output-Visualisierung
+# Siehe: https://www.entsoe.eu/eraa/
+
+# --- Pfade ---
+paths:
+  # Verzeichnis mit Eingabedaten (CSV/Parquet). Struktur siehe README.
+  data_dir: "data"
+  # Ausgabeverzeichnis für HTML-Plots
+  output_dir: "output"
+  # Unterordner pro Kategorie (optional)
+  output_subdirs:
+    adequacy: "adequacy"
+    dispatch: "dispatch"
+    net_position: "net_position"
+    prices: "prices"
+    storage: "storage"
+
+# --- Modell-Dimensionen (typisch ERAA) ---
+# 36 Klimajahre × 10 Samples = 360 Monte-Carlo-Läufe pro Zieljahr/Szenario
+dimensions:
+  n_climate_years: 36
+  n_samples_per_climate_year: 10
+  # Zieljahre (Target Years) z.B. 2025, 2028, 2030, 2033
+  target_years: [2025, 2028, 2030, 2033]
+  # Optional: explizite Klimajahre (wenn bekannt); sonst 1..n_climate_years
+  # climate_years: [1985, 1988, 2003, ...]
+
+# --- PEMMDB-Technologietypen (Pan-European Market Modelling Database) ---
+# Generation: alle Kraftwerkstypen; Storage: Pumpspeicher, Batterien etc.
+technology:
+  # Erzeugung (Generation)
+  generation:
+    - Nuclear
+    - Lignite
+    - Hard Coal
+    - Gas CCGT
+    - Gas OCGT
+    - Oil
+    - Biomass
+    - Hydro Run-of-River
+    - Hydro Reservoir
+    - Hydro Pumped Storage
+    - Wind Onshore
+    - Wind Offshore
+    - Solar
+    - Other RES
+    - DSR  # Demand-Side Response
+  # Speicher (Laden/Entladen, Füllstände)
+  storage:
+    - Battery
+    - Hydro Pumped Storage
+    - Other Storage
+
+# --- Study Zones (Marktgebiete) ---
+# Leer = aus Daten inferieren; sonst Liste für Filter/Reihenfolge
+study_zones: []  # z.B. [AT00, BE00, DE00, FR00, ...]
+
+# --- Visualisierung ---
+visualization:
+  # Plotly-Template (plotly, plotly_white, plotly_dark, ggplot2, seaborn, none)
+  template: "plotly_white"
+  # Farbpalette für Technologien (Plotly-kompatibel)
+  color_map_technology: "Set3"  # oder eigene Mapping-Datei
+  # Standard-Plot-Breite/Höhe (px)
+  figure_width: 1200
+  figure_height: 600
+  # HTML-Optionen
+  html:
+    full_html: true
+    include_plotlyjs: true  # true = CDN, "directory" = lokal
+  # Boxplot-Perzentile
+  boxplot_percentiles: [5, 25, 50, 75, 95]
+  # Heatmap: max. Zeiten pro Achse (Downsampling bei langen Reihen)
+  heatmap_max_timesteps: 8760  # 1 Jahr stündlich
+
+# --- Daten-Schema (Spaltennamen in CSV/Parquet) ---
+# Anpassen, falls deine Dateien andere Spaltennamen verwenden
+schema:
+  adequacy:
+    study_zone: "study_zone"
+    target_year: "target_year"
+    scenario: "scenario"
+    climate_year: "climate_year"
+    sample_id: "sample_id"
+    lole: "lole"
+    eens: "eens"
+    lld: "lld"
+    ens: "ens"
+    p50_lld: "p50_lld"
+    p95_lld: "p95_lld"
+    p50_ens: "p50_ens"
+    p95_ens: "p95_ens"
+  dispatch:
+    study_zone: "study_zone"
+    target_year: "target_year"
+    technology: "technology"
+    datetime: "datetime"  # oder hour_index
+    climate_year: "climate_year"
+    sample_id: "sample_id"
+    generation_mw: "generation_mw"
+    load_mw: "load_mw"   # z.B. Pumpspeicher-Laden
+  net_position:
+    study_zone: "study_zone"
+    target_year: "target_year"
+    datetime: "datetime"
+    climate_year: "climate_year"
+    sample_id: "sample_id"
+    net_position_mw: "net_position_mw"
+  prices:
+    study_zone: "study_zone"
+    target_year: "target_year"
+    datetime: "datetime"
+    climate_year: "climate_year"
+    sample_id: "sample_id"
+    price_eur_mwh: "price_eur_mwh"
+  storage:
+    study_zone: "study_zone"
+    target_year: "target_year"
+    storage_type: "storage_type"
+    datetime: "datetime"
+    climate_year: "climate_year"
+    sample_id: "sample_id"
+    level_pct: "level_pct"   # Füllstand 0–100 %
+    level_mwh: "level_mwh"   # optional
