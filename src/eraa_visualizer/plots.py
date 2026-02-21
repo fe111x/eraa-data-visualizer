@@ -137,6 +137,161 @@ def plot_adequacy_lole_heatmap(
     return fig
 
 
+def plot_adequacy_lole_heatmap_hour_month(
+    df: pd.DataFrame,
+    config: Config,
+    study_zone: str | None = None,
+    target_year: int | None = None,
+    output_path: Path | None = None,
+) -> go.Figure:
+    """Heatmap: LOLE nach Tagesstunde (0–23) × Monat (1–12). Erwartet Spalten hour, month, lole_h (oder value)."""
+    need = ["hour", "month"]
+    val_col = "lole_h" if "lole_h" in df.columns else "value" if "value" in df.columns else "lole"
+    if df.empty or val_col not in df.columns or not all(c in df.columns for c in need):
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No hour×month LOLE data (hour, month, lole_h/value) available",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+        )
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    work = df.copy()
+    if study_zone and "study_zone" in work.columns:
+        work = work[work["study_zone"] == study_zone]
+    if target_year is not None and "target_year" in work.columns:
+        work = work[work["target_year"] == target_year]
+    agg = work.groupby(["hour", "month"], as_index=False)[val_col].mean()
+    pivot = agg.pivot(index="hour", columns="month", values=val_col).fillna(0)
+    pivot = pivot.reindex(index=range(24), columns=range(1, 13)).fillna(0)
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=[f"Mo{m}" for m in pivot.columns],
+            y=[f"{int(h)}:00" for h in pivot.index],
+            colorscale="Reds",
+            colorbar=dict(title="LOLE [h]" if val_col == "lole_h" else "LOLE"),
+        )
+    )
+    fig.update_layout(
+        title=f"LOLE – Stunde × Monat (Mittel){' – ' + study_zone if study_zone else ''}{' – TY' + str(target_year) if target_year else ''}",
+        xaxis_title="Monat",
+        yaxis_title="Stunde (UTC)",
+        template=config.visualization.template,
+        width=config.visualization.figure_width,
+        height=500,
+    )
+    if output_path:
+        _write_html(fig, output_path, config)
+    return fig
+
+
+def plot_adequacy_ens_heatmap_hour_month(
+    df: pd.DataFrame,
+    config: Config,
+    study_zone: str | None = None,
+    target_year: int | None = None,
+    output_path: Path | None = None,
+) -> go.Figure:
+    """Heatmap: ENS nach Tagesstunde (0–23) × Monat (1–12). Erwartet hour, month, ens_mwh (oder value)."""
+    need = ["hour", "month"]
+    val_col = "ens_mwh" if "ens_mwh" in df.columns else "value" if "value" in df.columns else "ens"
+    if df.empty or val_col not in df.columns or not all(c in df.columns for c in need):
+        fig = go.Figure()
+        fig.add_annotation(
+            text="No hour×month ENS data (hour, month, ens_mwh/value) available",
+            xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False,
+        )
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    work = df.copy()
+    if study_zone and "study_zone" in work.columns:
+        work = work[work["study_zone"] == study_zone]
+    if target_year is not None and "target_year" in work.columns:
+        work = work[work["target_year"] == target_year]
+    agg = work.groupby(["hour", "month"], as_index=False)[val_col].mean()
+    pivot = agg.pivot(index="hour", columns="month", values=val_col).fillna(0)
+    pivot = pivot.reindex(index=range(24), columns=range(1, 13)).fillna(0)
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=[f"Mo{m}" for m in pivot.columns],
+            y=[f"{int(h)}:00" for h in pivot.index],
+            colorscale="Oranges",
+            colorbar=dict(title="ENS [MWh]" if val_col == "ens_mwh" else "ENS"),
+        )
+    )
+    fig.update_layout(
+        title=f"ENS – Stunde × Monat (Mittel){' – ' + study_zone if study_zone else ''}{' – TY' + str(target_year) if target_year else ''}",
+        xaxis_title="Monat",
+        yaxis_title="Stunde (UTC)",
+        template=config.visualization.template,
+        width=config.visualization.figure_width,
+        height=500,
+    )
+    if output_path:
+        _write_html(fig, output_path, config)
+    return fig
+
+
+# Study zone -> ISO-3 für Europakarte (Choropleth)
+ZONE_TO_ISO3 = {
+    "AL00": "ALB", "AT00": "AUT", "BA00": "BIH", "BE00": "BEL", "BG00": "BGR",
+    "CH00": "CHE", "CY00": "CYP", "CZ00": "CZE", "DE00": "DEU", "DKE1": "DNK",
+    "DKW1": "DNK", "EE00": "EST", "ES00": "ESP", "FI00": "FIN", "FR00": "FRA",
+    "GR00": "GRC", "GR03": "GRC", "HR00": "HRV", "HU00": "HUN", "IE00": "IRL",
+    "ITCA": "ITA", "ITCN": "ITA", "ITCS": "ITA", "ITN1": "ITA", "ITS1": "ITA",
+    "ITSA": "ITA", "ITSI": "ITA", "LT00": "LTU", "LV00": "LVA", "ME00": "MNE",
+    "MK00": "MKD", "MT00": "MLT", "NL00": "NLD", "NOM1": "NOR", "NON1": "NOR",
+    "NOS0": "NOR", "PL00": "POL", "PT00": "PRT", "RO00": "ROU", "RS00": "SRB",
+    "SE01": "SWE", "SE02": "SWE", "SE03": "SWE", "SE04": "SWE", "SI00": "SVN",
+    "SK00": "SVK", "UK00": "GBR", "UKNI": "GBR", "LUG1": "LUX",
+}
+
+
+def plot_adequacy_europe_map(
+    df: pd.DataFrame,
+    config: Config,
+    metric: str = "lole",
+    target_year: int | None = None,
+    output_path: Path | None = None,
+) -> go.Figure:
+    """Choropleth-Karte Europa: LOLE oder ENS pro Land (aggregiert aus Study Zones)."""
+    if df.empty or metric not in df.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="No adequacy data available", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    work = df.copy()
+    if target_year is not None and "target_year" in work.columns:
+        work = work[work["target_year"] == target_year]
+    work["country_iso3"] = work["study_zone"].map(ZONE_TO_ISO3)
+    work = work.dropna(subset=["country_iso3"])
+    agg = work.groupby("country_iso3", as_index=False)[metric].mean()
+    agg = agg.rename(columns={"country_iso3": "iso3", metric: "value"})
+    fig = px.choropleth(
+        agg,
+        locations="iso3",
+        locationmode="ISO-3",
+        color="value",
+        color_continuous_scale="Reds" if metric == "lole" else "Oranges",
+        title=f"Jahres-{metric.upper()} (Mittel) pro Land – TY {target_year or 'alle'}",
+        labels={"value": "LOLE [h/Jahr]" if metric == "lole" else "ENS [GWh/Jahr]"},
+    )
+    fig.update_geos(scope="europe", visible=True)
+    fig.update_layout(
+        template=config.visualization.template,
+        width=config.visualization.figure_width,
+        height=500,
+        margin=dict(l=0, r=0, t=50, b=0),
+    )
+    if output_path:
+        _write_html(fig, output_path, config)
+    return fig
+
+
 # --- Dispatch (Generation) ---
 
 
@@ -242,6 +397,70 @@ def plot_dispatch_heatmap(
     return fig
 
 
+def _add_hour_month(df: pd.DataFrame, datetime_col: str = "datetime") -> pd.DataFrame:
+    """Fügt Spalten hour (0–23) und month (1–12) aus datetime hinzu."""
+    if datetime_col not in df.columns:
+        return df
+    out = df.copy()
+    try:
+        dt = pd.to_datetime(out[datetime_col], errors="coerce")
+        out["hour"] = dt.dt.hour
+        out["month"] = dt.dt.month
+    except Exception:
+        pass
+    return out
+
+
+def plot_dispatch_heatmap_hour_month(
+    df: pd.DataFrame,
+    config: Config,
+    study_zone: str,
+    target_year: int,
+    technology: str | None = None,
+    output_path: Path | None = None,
+) -> go.Figure:
+    """Heatmap: Erzeugung [MW] nach Stunde (0–23) × Monat (1–12)."""
+    if df.empty or "generation_mw" not in df.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="No dispatch data available", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    work = df[(df["study_zone"] == study_zone) & (df["target_year"] == target_year)].copy()
+    work = _add_hour_month(work)
+    if "month" not in work.columns or "hour" not in work.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="Could not parse datetime for hour/month", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    if technology:
+        work = work[work["technology"] == technology]
+    agg = work.groupby(["hour", "month"], as_index=False)["generation_mw"].mean()
+    pivot = agg.pivot(index="hour", columns="month", values="generation_mw").fillna(0)
+    pivot = pivot.reindex(index=range(24), columns=range(1, 13)).fillna(0)
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=[f"Mo{m}" for m in pivot.columns],
+            y=[f"{int(h)}:00" for h in pivot.index],
+            colorscale="Blues",
+            colorbar=dict(title="Generation [MW]"),
+        )
+    )
+    fig.update_layout(
+        title=f"Erzeugung – Stunde × Monat – {study_zone} TY{target_year}" + (f" ({technology})" if technology else ""),
+        xaxis_title="Monat",
+        yaxis_title="Stunde (UTC)",
+        template=config.visualization.template,
+        width=config.visualization.figure_width,
+        height=500,
+    )
+    if output_path:
+        _write_html(fig, output_path, config)
+    return fig
+
+
 # --- Net Position ---
 
 
@@ -327,6 +546,54 @@ def plot_net_position_heatmap(
     return fig
 
 
+def plot_net_position_heatmap_hour_month(
+    df: pd.DataFrame,
+    config: Config,
+    study_zone: str,
+    target_year: int,
+    output_path: Path | None = None,
+) -> go.Figure:
+    """Heatmap: Net Position [MW] nach Stunde × Monat."""
+    if df.empty or "net_position_mw" not in df.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="No net position data available", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    work = df[(df["study_zone"] == study_zone) & (df["target_year"] == target_year)].copy()
+    work = _add_hour_month(work)
+    if "month" not in work.columns or "hour" not in work.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="Could not parse datetime", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    agg = work.groupby(["hour", "month"], as_index=False)["net_position_mw"].mean()
+    pivot = agg.pivot(index="hour", columns="month", values="net_position_mw").fillna(0)
+    pivot = pivot.reindex(index=range(24), columns=range(1, 13)).fillna(0)
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=[f"Mo{m}" for m in pivot.columns],
+            y=[f"{int(h)}:00" for h in pivot.index],
+            colorscale="RdBu",
+            zmid=0,
+            colorbar=dict(title="Net Position [MW]"),
+        )
+    )
+    fig.update_layout(
+        title=f"Net Position – Stunde × Monat – {study_zone} TY{target_year}",
+        xaxis_title="Monat",
+        yaxis_title="Stunde (UTC)",
+        template=config.visualization.template,
+        width=config.visualization.figure_width,
+        height=500,
+    )
+    if output_path:
+        _write_html(fig, output_path, config)
+    return fig
+
+
 # --- Prices ---
 
 
@@ -397,6 +664,53 @@ def plot_prices_boxplot(
     )
     fig.update_xaxes(tickangle=-45)
     _fig_defaults(fig, config)
+    if output_path:
+        _write_html(fig, output_path, config)
+    return fig
+
+
+def plot_prices_heatmap_hour_month(
+    df: pd.DataFrame,
+    config: Config,
+    study_zone: str,
+    target_year: int,
+    output_path: Path | None = None,
+) -> go.Figure:
+    """Heatmap: Preis [€/MWh] nach Stunde × Monat."""
+    if df.empty or "price_eur_mwh" not in df.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="No price data available", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    work = df[(df["study_zone"] == study_zone) & (df["target_year"] == target_year)].copy()
+    work = _add_hour_month(work)
+    if "month" not in work.columns or "hour" not in work.columns:
+        fig = go.Figure()
+        fig.add_annotation(text="Could not parse datetime", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+        if output_path:
+            _write_html(fig, output_path, config)
+        return fig
+    agg = work.groupby(["hour", "month"], as_index=False)["price_eur_mwh"].mean()
+    pivot = agg.pivot(index="hour", columns="month", values="price_eur_mwh").fillna(0)
+    pivot = pivot.reindex(index=range(24), columns=range(1, 13)).fillna(0)
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values,
+            x=[f"Mo{m}" for m in pivot.columns],
+            y=[f"{int(h)}:00" for h in pivot.index],
+            colorscale="Viridis",
+            colorbar=dict(title="Preis [€/MWh]"),
+        )
+    )
+    fig.update_layout(
+        title=f"Preis – Stunde × Monat – {study_zone} TY{target_year}",
+        xaxis_title="Monat",
+        yaxis_title="Stunde (UTC)",
+        template=config.visualization.template,
+        width=config.visualization.figure_width,
+        height=500,
+    )
     if output_path:
         _write_html(fig, output_path, config)
     return fig

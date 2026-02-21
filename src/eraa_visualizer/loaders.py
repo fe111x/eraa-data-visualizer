@@ -68,6 +68,15 @@ def load_storage(data_dir: Path, schema: dict[str, str]) -> pd.DataFrame | None:
     return None
 
 
+def load_adequacy_hour_month(data_dir: Path) -> pd.DataFrame | None:
+    """Lädt Adequacy nach Stunde/Monat (Spalten: study_zone, target_year, month, hour, ggf. climate_year, sample_id, lole_h, ens_mwh)."""
+    for name in ("adequacy_hour_month.csv", "adequacy_hour_month.parquet"):
+        df = _read_table(data_dir / name)
+        if df is not None:
+            return df
+    return None
+
+
 def load_dataset(config: Config | None = None) -> ERAADataset:
     """Lädt alle verfügbaren ERAA-Daten aus config.paths.data_dir."""
     config = config or Config.load()
@@ -77,6 +86,7 @@ def load_dataset(config: Config | None = None) -> ERAADataset:
     s = config.schema
     return ERAADataset(
         adequacy=load_adequacy(data_dir, s.adequacy),
+        adequacy_hour_month=load_adequacy_hour_month(data_dir),
         dispatch=load_dispatch(data_dir, s.dispatch),
         net_position=load_net_position(data_dir, s.net_position),
         prices=load_prices(data_dir, s.prices),

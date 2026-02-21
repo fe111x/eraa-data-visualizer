@@ -204,12 +204,14 @@ class ERAADataset:
     def __init__(
         self,
         adequacy: pd.DataFrame | None = None,
+        adequacy_hour_month: pd.DataFrame | None = None,
         dispatch: pd.DataFrame | None = None,
         net_position: pd.DataFrame | None = None,
         prices: pd.DataFrame | None = None,
         storage: pd.DataFrame | None = None,
     ):
         self.adequacy = adequacy
+        self.adequacy_hour_month = adequacy_hour_month
         self.dispatch = dispatch
         self.net_position = net_position
         self.prices = prices

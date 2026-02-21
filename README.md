@@ -60,6 +60,16 @@ Erwartet werden CSV- oder Parquet-Dateien unter `data_dir` mit den in `config.ya
 
 Fehlende Kategorien werden übersprungen; für jede vorhandene Kategorie werden die zugehörigen Plots erzeugt.
 
+## Dashboard (Streamlit)
+
+Alle Visualisierungen gibt es auch als **interaktives Web-Dashboard** mit Filtern (Zieljahr, Study Zone), angelehnt an das [offizielle ERAA-Dashboard](https://www.entsoe.eu/eraa/2024/modelling-data) von ENTSO-E.
+
+**Starten:** Aus Projektroot `uv run streamlit run app/dashboard.py` ausführen, dann im Browser **http://localhost:8501** öffnen.
+
+Ausführliche Anleitung: **[README_DASHBOARD.md](README_DASHBOARD.md)** (lokaler Start, Browser, Beispieldaten).
+
+---
+
 ## Nutzung
 
 ### Pipeline ausführen (alle Plots)
@@ -119,18 +129,21 @@ eraa-data-visualizer/
 
 ## Git und GitHub
 
-Repository ist bereits initialisiert. Zum Pushen auf GitHub:
+Repository ist bereits initialisiert. **Hinweis:** GitHub erlaubt seit 2021 kein Passwort mehr für Git – du brauchst einen **Personal Access Token (PAT)** oder SSH.
 
-1. Auf GitHub ein neues Repository anlegen (z. B. `eraa-data-visualizer`, leer, ohne README).
-2. Remote hinzufügen und pushen:
+### Erster Push
+
+1. **Token erstellen:** [github.com/settings/tokens](https://github.com/settings/tokens) → „Generate new token (classic)“ → Scope **repo** → Token kopieren.
+2. **Repo auf GitHub anlegen:** [github.com/new](https://github.com/new), Name z. B. `eraa-data-visualizer`, leer (ohne README).
+3. **Remote auf deinen Benutzernamen setzen** (z. B. `fe111x`) und pushen:
 
 ```bash
-git remote add origin https://github.com/DEIN_USERNAME/eraa-data-visualizer.git
-git branch -M main
+git remote set-url origin https://github.com/fe111x/eraa-data-visualizer.git
 git push -u origin main
 ```
 
-Oder mit GitHub CLI: `gh repo create eraa-data-visualizer --private --source=. --push`
+Wenn Git nach **Username** fragt: dein GitHub-Benutzername (z. B. `fe111x`).  
+Wenn Git nach **Password** fragt: den **Token** einfügen (nicht dein GitHub-Passwort).
 
 ## Lizenz
 

@@ -1,0 +1,18 @@
+# Streamlit-Konfiguration für ERAA Dashboard (optional)
+# Siehe: https://docs.streamlit.io/library/advanced-features/theming
+
+[theme]
+primaryColor = "#003366"
+backgroundColor = "#f8f9fa"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#262730"
+font = "sans serif"
+
+[server]
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false

@@ -7,9 +7,9 @@ dist/
 build/
 .eggs/
 
-# Data and output (optional: commit sample data if desired)
-# data/*.csv
-# output/
+# Data and output (generated; nicht versionieren)
+data/
+output/
 
 # IDE
 .idea/
